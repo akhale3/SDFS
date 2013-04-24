@@ -2,5 +2,12 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.7"/>
+	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/bctest-jdk13-148.jar"/>
+	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/jce-jdk13-148.jar"/>
+	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/jce-ext-jdk12-148.jar"/>
+	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/jce-ext-jdk13-148.jar"/>
+	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/bcpg-jdk14-148.jar"/>
+	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/bcpkix-jdk14-148.jar"/>
+	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/bcprov-ext-debug-jdk15on-148.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
