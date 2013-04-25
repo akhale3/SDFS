@@ -2,10 +2,11 @@ package sdfs.ca;
 
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.RandomAccessFile;
 import java.math.BigInteger;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
@@ -95,15 +96,15 @@ public class CertAuth {
         writeCert(subjectName, certGen.generateX509Certificate(CA_pair.getPrivate(), "BC"));
 	}
 
-	public static X509Certificate readCert(String cert_name) throws CertificateException, NoSuchProviderException, IOException
-	{	byte[] b;
-		RandomAccessFile cert_file;
+	public static X509Certificate readCert(File f) throws CertificateException, NoSuchProviderException, IOException
+	{	
+		byte[] b;
 		try
 		{
-			cert_file = new RandomAccessFile(cert_name, "r");
-			b = new byte[(int)cert_file.length()];
-			cert_file.read(b);
-			cert_file.close();
+			FileInputStream cert_f = new FileInputStream(f);
+			b = new byte[(int)cert_f.available()];
+			cert_f.read(b);
+			cert_f.close();
 			
 		}
 		catch (IOException e)
@@ -117,9 +118,9 @@ public class CertAuth {
 	    return  (X509Certificate)fact.generateCertificate(in);
 	 }
 	
-	public static void checkCertStatus(String subjectName) throws NoSuchProviderException, IOException, CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException
+	public static void checkCertStatus(File f) throws NoSuchProviderException, IOException, CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException
 	{
-		X509Certificate cert=readCert(subjectName+"_cert");
+		X509Certificate cert = readCert(f);
 		try
 		{
 			cert.checkValidity(new Date());
@@ -129,7 +130,7 @@ public class CertAuth {
 		{
 			return;
 		}
-		System.out.println("Certificate for node "+subjectName+" is valid.");
+		System.out.println("Certificate for node "+ cert.getSubjectX500Principal().getName().substring(3) +" is valid.");
 	}
 	    
 	    public static void main(String[] args)  throws Exception
@@ -145,7 +146,7 @@ public class CertAuth {
 	        System.out.println(cert1);
 	        System.out.println(cert2);
 	        System.out.println("--------------");
-	        checkCertStatus("hello");
-	        checkCertStatus("kitty");
+//	        checkCertStatus("hello");
+//	        checkCertStatus("kitty");
 	      }
 	}
