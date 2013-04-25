@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.UnknownHostException;
+import java.nio.charset.Charset;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 
@@ -36,46 +37,35 @@ public class SDFSClient2 {
 	
 	void getFile() throws UnknownHostException, IOException
 	{
-/*
-		String sentence;
-		String modifiedSentence;
 		
-		BufferedReader inFromUser = new BufferedReader( new InputStreamReader(System.in));
-		BufferedReader inFromServer = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-		
-		sentence = inFromUser.readLine();
-		outToServer.writeBytes(sentence + '\n');
-		modifiedSentence = inFromServer.readLine();
-		System.out.println("FROM SERVER: " + modifiedSentence);
-*/
 	}
 	
 	void putFile(String fileUID) throws IOException
 	{
 		int length;
+		String fileName;
 		Long fileLength;
 		Path filePath = FileSystems.getDefault().getPath(".", "/", fileUID);
 		File file = new File(filePath.toString());
 		byte[] buffer = new byte[1024];
 		fileIS = new FileInputStream(file);
-		fileLength = new Long(file.length());
-		outToServer.write(fileLength.intValue());
+		fileName = file.getName();
+		outToServer.write(fileName.getBytes(Charset.forName("UTF-8")));
+		outToServer.write('\n');
+		outToServer.flush();
+		fileLength = new Long(file.length());;
+		outToServer.write(fileLength.toString().getBytes());
+		outToServer.write('\n');
 		outToServer.flush();
 		while ((length = fileIS.read(buffer)) != -1)
 		{
 			outToServer.write(buffer, 0, length);
 		}
-
-//		BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
-//		BufferedWriter output = new BufferedWriter(new OutputStreamWriter(outToServer));
-//		String modifiedSentence = input.readLine();
-//		output.write(modifiedSentence + '\n');
-//		output.flush();
 	}
 	
 	void sendCert() throws IOException
 	{
-		putFile("./hello_cert");
+		putFile("./test.cert");
 	}
 	
 	void delegate()

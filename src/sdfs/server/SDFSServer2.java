@@ -1,10 +1,11 @@
 package sdfs.server;
 
+import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -25,7 +26,6 @@ public class SDFSServer2{
 
 	private InputStream inFromClient = null;
 	private OutputStream outToClient = null;
-	private static FileInputStream fileIS = null;
 	private FileOutputStream fileOS = null;
 	
 	private SSLServerSocketFactory sslSockFact = null;
@@ -82,35 +82,46 @@ public class SDFSServer2{
         System.out.println("Connection Established");
 	}
 	
-	void getFile() throws IOException
+	void invokeVerify(File file) throws InvalidKeyException, NoSuchProviderException, CertificateException, NoSuchAlgorithmException, SignatureException, IOException
 	{
-		int length;
-		Long fileLength;
-		byte[] buffer;
-		Path filePath = FileSystems.getDefault().getPath("./test_recv");
-		fileLength = new Long(inFromClient.read());
-		fileOS = new FileOutputStream(filePath.toString());
-		buffer = new byte[fileLength.intValue()];
-		while ((length = inFromClient.read(buffer)) > 0)
-		{
-			fileOS.write(buffer, 0, length);
-		}
-
-//		BufferedReader input = new BufferedReader(new InputStreamReader(inFromClient));
-//		String modifiedSentence = input.readLine();
-//		System.out.println("FROM CLIENT: " + modifiedSentence);
-	}
-	
-	void invokeVerify() throws InvalidKeyException, NoSuchProviderException, CertificateException, NoSuchAlgorithmException, SignatureException, IOException
-	{
-		File file = new File("./test_recv");
 		CertAuth.checkCertStatus(file);
 		System.out.println("Certificate Status: Valid");
 	}
 	
+	void getFile() throws IOException, InvalidKeyException, NoSuchProviderException, CertificateException, NoSuchAlgorithmException, SignatureException
+	{
+		int length;
+		String fileName;
+		String suffix;
+		int fileLength;
+		byte[] buffer;
+		File file = null;
+		BufferedReader input = new BufferedReader(new InputStreamReader(inFromClient));
+		
+		fileName = input.readLine();
+		System.out.println(fileName);
+		Path filePath = FileSystems.getDefault().getPath("./", "src", "sdfs", "server", "certs", fileName);
+		
+		fileLength = Integer.parseInt(input.readLine());
+		System.out.println(fileLength);
+		fileOS = new FileOutputStream(filePath.toString());
+		buffer = new byte[fileLength];
+		while ((length = inFromClient.read(buffer)) > 0)
+		{
+			fileOS.write(buffer, 0, length);
+		}
+		
+		suffix = fileName.substring(fileName.lastIndexOf('.'), fileName.length()).trim();
+		if(suffix.equalsIgnoreCase("cert"))
+		{
+			file = new File(fileName);
+			invokeVerify(file);
+		}
+	}
+	
 	void endFSSession() throws IOException
 	{
-		fileIS.close();
+		fileOS.close();
 		outToClient.close();
 		inFromClient.close();
 		serverSocket.close();
@@ -122,7 +133,7 @@ public class SDFSServer2{
 		SDFSServer2 serv = new SDFSServer2();
 		serv.startFSSession();
 		serv.getFile();
-		serv.invokeVerify();
+//		serv.invokeVerify();
 		serv.endFSSession();
       }
 }
