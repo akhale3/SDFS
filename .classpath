@@ -9,5 +9,7 @@
 	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/bcpg-jdk14-148.jar"/>
 	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/bcpkix-jdk14-148.jar"/>
 	<classpathentry kind="lib" path="/home/anish/Downloads/crypto-148/jars/bcprov-ext-debug-jdk15on-148.jar"/>
+	<classpathentry kind="lib" path="src/UnlimitedJCEPolicy/local_policy.jar"/>
+	<classpathentry kind="lib" path="src/UnlimitedJCEPolicy/US_export_policy.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

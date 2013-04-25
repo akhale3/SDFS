@@ -8,52 +8,22 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocket;
 import javax.net.ssl.SSLSocketFactory;
-import javax.net.ssl.TrustManagerFactory;
 
-public class SDFSClient {
+public class SDFSClient2 {
 	
 	private DataInputStream inFromServer = null;
 	private DataOutputStream outToServer = null;
 	private static FileInputStream fileIS = null;
 	
-	private static SSLContext sslContext = null;
 	private SSLSocketFactory sslFact = null;
 	private SSLSocket clientSocket = null;
 	
-	static SSLContext setupContext() throws NoSuchAlgorithmException, KeyStoreException, CertificateException, IOException, KeyManagementException, UnrecoverableKeyException
-	{
-		KeyManagerFactory kMFact = KeyManagerFactory.getInstance("SunX509");
-		KeyStore clientStore = KeyStore.getInstance("PKCS12");
-		fileIS = new FileInputStream("client.p12");
-		clientStore.load(fileIS, "clientPwd".toCharArray());
-		kMFact.init(clientStore, "clientPwd".toCharArray());
-		
-		TrustManagerFactory tMFact = TrustManagerFactory.getInstance("SunX509");
-		KeyStore trustStore = KeyStore.getInstance("JKS");
-		fileIS = new FileInputStream("trustStore.jks");
-		trustStore.load(fileIS, "trustPwd".toCharArray());
-		tMFact.init(trustStore);
-		
-		SSLContext sslContext = SSLContext.getInstance("TLS");
-		sslContext.init(kMFact.getKeyManagers(), tMFact.getTrustManagers(), null);
-		
-		return sslContext;
-	}
-	
 	void startFSSession() throws UnknownHostException, IOException
 	{
-		sslFact = sslContext.getSocketFactory();
+		sslFact = (SSLSocketFactory)SSLSocketFactory.getDefault();
 		clientSocket = (SSLSocket)sslFact.createSocket("localhost", 6789);
 		inFromServer = new DataInputStream(clientSocket.getInputStream());
 		outToServer = new DataOutputStream(clientSocket.getOutputStream());
@@ -75,11 +45,16 @@ public class SDFSClient {
 */
 	}
 	
+	void sendCert() throws IOException
+	{
+		putFile("hello_cert");
+	}
+	
 	void putFile(String fileUID) throws IOException
 	{
 		int length;
 		Long fileLength;
-		Path filePath = FileSystems.getDefault().getPath("./", fileUID);
+		Path filePath = FileSystems.getDefault().getPath(".", "/", fileUID);
 		File file = new File(filePath.toString());
 		byte[] buffer = new byte[1024];
 		fileIS = new FileInputStream(file);
@@ -108,9 +83,12 @@ public class SDFSClient {
 	
 	public static void main(String argv[]) throws Exception
 	 {
-		SDFSClient client = new SDFSClient();
-		sslContext = setupContext();
+		SDFSClient2 client = new SDFSClient2();
 		client.startFSSession();
+		if (client.clientSocket == null)
+		{
+			client.sendCert();
+		}
 		client.putFile("test");
 		client.endSession();
 	 }
