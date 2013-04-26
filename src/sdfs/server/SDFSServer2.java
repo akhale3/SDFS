@@ -47,7 +47,7 @@ public class SDFSServer2{
 		inFromClient = serverSocket.getInputStream();
 		outToClient = serverSocket.getOutputStream();
 		
-		System.out.println("Receiving client certificate ...");
+//		System.out.println("Receiving client certificate ...");
 /*		CertificateFactory fact_client = CertificateFactory.getInstance("X.509", "BC");
 		X509Certificate clientCert = null;
 		try
@@ -59,7 +59,7 @@ public class SDFSServer2{
 			e1.printStackTrace();
 		}
 */
-		System.out.println("Client's certificate received");
+//		System.out.println("Client's certificate received");
 		
 /*		try
 		{
@@ -72,7 +72,7 @@ public class SDFSServer2{
 			return;
 		}
 */
-		System.out.println("Client's certificate verified");
+//		System.out.println("Client's certificate verified");
 /*       
         System.out.println("Sending server certificate to client ...");
         PEMWriter pemWrt = new PEMWriter(new OutputStreamWriter(outToClient));
@@ -99,11 +99,11 @@ public class SDFSServer2{
 		BufferedReader input = new BufferedReader(new InputStreamReader(inFromClient));
 		
 		fileName = input.readLine();
-		System.out.println(fileName);
+//		System.out.println(fileName);
 		Path filePath = FileSystems.getDefault().getPath("./", "src", "sdfs", "server", "certs", fileName);
 		
 		fileLength = Integer.parseInt(input.readLine());
-		System.out.println(fileLength);
+//		System.out.println(fileLength);
 		fileOS = new FileOutputStream(filePath.toString());
 		buffer = new byte[fileLength];
 		while ((length = inFromClient.read(buffer)) > 0)
@@ -111,7 +111,8 @@ public class SDFSServer2{
 			fileOS.write(buffer, 0, length);
 		}
 		
-		suffix = fileName.substring(fileName.lastIndexOf('.'), fileName.length()).trim();
+		suffix = fileName.substring(fileName.lastIndexOf('.') + 1, fileName.length()).trim();
+//		System.out.println(suffix);
 		if(suffix.equalsIgnoreCase("cert"))
 		{
 			file = new File(fileName);
