@@ -20,13 +20,14 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
+
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.ShortBufferException;
+
 import org.bouncycastle.util.encoders.Base64;
 
 
@@ -74,6 +75,7 @@ public class SDFSServerFn {
 	{
 		Path filePath;
 		filePath = FileSystems.getDefault().getPath("./", "src", "sdfs", "server", fileName);
+//		filePath = FileSystems.getDefault().getPath(fileName);
 		return filePath;
 	}
     
@@ -95,49 +97,6 @@ public class SDFSServerFn {
         return buf.toString();
     }
 
-	
-	/**opens the meta file for the "fileName" provided, decrypts the content using server's
-    	private key and returns the hashed content (which will be the enc/dec) key of file
-     * @param fileName
-     * @return
-     * @throws InvalidKeyException
-     * @throws ShortBufferException
-     * @throws IllegalBlockSizeException
-     * @throws BadPaddingException
-     * @throws NoSuchAlgorithmException
-     * @throws NoSuchProviderException
-     * @throws NoSuchPaddingException
-     * @throws IOException
-     */
-	@SuppressWarnings("unused")
-	private byte[] decryptMetaFile(String fileName) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, IOException
-	{
-		
-    	 	String line,text="";
-    	 	Path filePath = computeFilePath(fileName);
-			BufferedReader br = new BufferedReader(new FileReader(filePath.toString()+"_meta"));
-			while ((line = br.readLine()) != null) {
-				text+=line;
-			}
-			System.out.println(text);
-			br.close();
-			
-			byte[] encryptedText = Base64.decode(text);
-						
-	        cipher.init(Cipher.DECRYPT_MODE, privKey);
-	       byte[] plainText = cipher.doFinal(encryptedText);
-	        return plainText;
-	}
-
-     /*generate a cert and store it persistently*/
-//     private void generateServerCert() throws InvalidKeyException, CertificateEncodingException, NoSuchProviderException, SecurityException, SignatureException, NoSuchAlgorithmException, IOException
-//     {
-//    	 serverCert=CA.generateCert("server",pair.getPublic()); //writes to the server machine as well!
-//     }
-     
-     
-	
-	
 	/**opens the file "fileName", hashes its contents, encrypts the content using server's
 	public key and stores it in "fileName_meta" file.
 	 * @param fileName
@@ -193,6 +152,7 @@ public class SDFSServerFn {
 	protected void encryptFile(String fileName) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, IOException, InvalidAlgorithmParameterException
 	{
 		Path filePath = computeFilePath(fileName);
+		System.out.println(filePath.toString());
 		FileInputStream ip_f = new FileInputStream(filePath.toString());
 		byte[] b = new byte[(int)ip_f.available()];
 		ip_f.read(b);
@@ -263,18 +223,25 @@ public class SDFSServerFn {
         return convertHexToString(toHex(plainText,plainText.length));
 	}
 	
-public static void main(String[] args) throws InvalidKeyException, NoSuchAlgorithmException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchProviderException, NoSuchPaddingException, InvalidKeySpecException, IOException, InvalidAlgorithmParameterException {
-	
-	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); //have this in the final main method()
-	
-	SDFSServerFn x=new SDFSServerFn();
-	
-	
-	x.generateMetaFile("test.txt");
-	x.encryptFile("test.txt");
-//	System.out.println();
-	x.decryptFile("test.txt");
-	
-}
+	/**opens the meta file for the "fileName" provided, decrypts the content using server's
+	 * private key and returns the hashed content (which will be the enc/dec) key of file
+	 * @param fileName
+	 * @return
+	 * @throws InvalidKeyException
+	 * @throws ShortBufferException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchProviderException
+	 * @throws NoSuchPaddingException
+	 * @throws IOException
+	 * @throws InvalidAlgorithmParameterException 
+	 */
+	@SuppressWarnings("unused")
+	private String decryptMetaFile(String fileName) throws InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, NoSuchAlgorithmException, NoSuchProviderException, NoSuchPaddingException, IOException, InvalidAlgorithmParameterException
+	{
+		Path filePath = computeFilePath(fileName);
+		return decryptFile(filePath.toString()+"_meta");
+	}
 
 }

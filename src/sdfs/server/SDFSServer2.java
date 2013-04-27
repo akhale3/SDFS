@@ -30,7 +30,7 @@ import javax.net.ssl.SSLSocket;
 import sdfs.ca.CertAuth;
 
 /**
- * 
+ * Server Program
  * @author anish
  *
  */
@@ -50,6 +50,14 @@ public class SDFSServer2{
 	
 	private final String[] enabledCipherSuites = { "SSL_DH_anon_WITH_RC4_128_MD5" };
 	
+	/**
+	 * Initiates a secure session with client over SSL
+	 * @throws IOException
+	 * @throws CertificateException
+	 * @throws NoSuchProviderException
+	 * @throws InterruptedException
+	 */
+	
 	void startFSSession() throws IOException, CertificateException, NoSuchProviderException, InterruptedException
 	{
 		sslSockFact = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
@@ -68,11 +76,28 @@ public class SDFSServer2{
         System.out.println("Connection Established");
 	}
 	
+	/**
+	 * Verifies the validity of the client certificate
+	 * @param file
+	 * @throws InvalidKeyException
+	 * @throws NoSuchProviderException
+	 * @throws CertificateException
+	 * @throws NoSuchAlgorithmException
+	 * @throws SignatureException
+	 * @throws IOException
+	 */
+	
 	void invokeVerify(File file) throws InvalidKeyException, NoSuchProviderException, CertificateException, NoSuchAlgorithmException, SignatureException, IOException
 	{
 		CertAuth.checkCertStatus(file);
 		System.out.println("Certificate Status: Valid");
 	}
+	
+	/**
+	 * Sets the directory path to ./src/sdfs/server
+	 * @param fileUID
+	 * @return filePath
+	 */
 	
 	Path computeFilePath(String fileUID)
 	{
@@ -80,6 +105,21 @@ public class SDFSServer2{
 		filePath = FileSystems.getDefault().getPath("./", "src", "sdfs", "server", fileUID);
 		return filePath;
 	}
+	
+	/**
+	 * Sends a requested file to the client upon decryption
+	 * @param fileUID
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchProviderException
+	 * @throws InvalidKeySpecException
+	 * @throws NoSuchPaddingException
+	 * @throws InvalidKeyException
+	 * @throws ShortBufferException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws InvalidAlgorithmParameterException
+	 */
 	
 	void putFile(String fileUID) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeySpecException, NoSuchPaddingException, InvalidKeyException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException
 	{
@@ -108,6 +148,23 @@ public class SDFSServer2{
 			System.out.println(fileUID + " does not exist");
 		}
 	}
+	
+	/**
+	 * Receives a file from the client, creates meta data and stores it at filePath 
+	 * @param fileUID
+	 * @throws IOException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchProviderException
+	 * @throws CertificateException
+	 * @throws NoSuchAlgorithmException
+	 * @throws SignatureException
+	 * @throws InvalidKeySpecException
+	 * @throws NoSuchPaddingException
+	 * @throws ShortBufferException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws InvalidAlgorithmParameterException
+	 */
 	
 	void getFile(String fileUID) throws IOException, InvalidKeyException, NoSuchProviderException, CertificateException, NoSuchAlgorithmException, SignatureException, InvalidKeySpecException, NoSuchPaddingException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException
 	{
@@ -159,6 +216,11 @@ public class SDFSServer2{
 		}
 	}
 	
+	/**
+	 * Terminates an established session
+	 * @throws IOException
+	 */
+	
 	void endFSSession() throws IOException
 	{
 		fileOS.close();
@@ -167,6 +229,25 @@ public class SDFSServer2{
 		inFromClient.close();
 		serverSocket.close();
 	}
+	
+	/**
+	 * Receives commands "get" and "put" from client.
+	 * "get" invokes getFile() while "put" invokes putFile().
+	 * Any other command terminates the session.
+	 * @throws IOException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchProviderException
+	 * @throws CertificateException
+	 * @throws NoSuchAlgorithmException
+	 * @throws SignatureException
+	 * @throws InterruptedException
+	 * @throws InvalidKeySpecException
+	 * @throws NoSuchPaddingException
+	 * @throws ShortBufferException
+	 * @throws IllegalBlockSizeException
+	 * @throws BadPaddingException
+	 * @throws InvalidAlgorithmParameterException
+	 */
 	
 	void getCommand() throws IOException, InvalidKeyException, NoSuchProviderException, CertificateException, NoSuchAlgorithmException, SignatureException, InterruptedException, InvalidKeySpecException, NoSuchPaddingException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, InvalidAlgorithmParameterException
 	{

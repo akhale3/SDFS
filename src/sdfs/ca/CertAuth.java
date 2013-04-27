@@ -14,7 +14,6 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SecureRandom;
-import java.security.Security;
 import java.security.SignatureException;
 import java.security.cert.CertificateEncodingException;
 import java.security.cert.CertificateException;
@@ -25,6 +24,12 @@ import java.util.Date;
 import org.bouncycastle.asn1.x509.X509Name;
 import org.bouncycastle.openssl.PEMWriter;
 import org.bouncycastle.x509.X509V1CertificateGenerator;
+
+/**
+ * Certificate Authority
+ * @author rohit
+ *
+ */
 
 @SuppressWarnings("deprecation")
 public class CertAuth {
@@ -51,6 +56,14 @@ public class CertAuth {
 		}
 	}
 	
+	/**
+	 * Writes the generated X509Certificate to disk
+	 * @param subjectName
+	 * @param cert
+	 * @throws CertificateEncodingException
+	 * @throws IOException
+	 */
+	
 	private static void writeCert(String subjectName, X509Certificate cert) throws CertificateEncodingException, IOException
 	{
 		PEMWriter pemWrt = new PEMWriter(new BufferedWriter(new FileWriter("./src/sdfs/ca/certs/" + subjectName+".cert")));
@@ -59,7 +72,7 @@ public class CertAuth {
 	}
 	
 	/**
-	 * 
+	 * Internal entities of the certificate to be generated
 	 * @param subjectName
 	 * @param pair
 	 * @return X509Certificate
@@ -74,7 +87,7 @@ public class CertAuth {
 	public static X509Certificate generateCert(String subjectName, KeyPair pair) throws InvalidKeyException, NoSuchProviderException, SecurityException, SignatureException, NoSuchAlgorithmException, CertificateEncodingException, IOException
 	{
 		
-		// generate the certificate
+		// Generate the certificate
         X509V1CertificateGenerator  certGen = new X509V1CertificateGenerator();
 
         certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
@@ -88,25 +101,16 @@ public class CertAuth {
         writeCert(subjectName, certGen.generateX509Certificate(pair.getPrivate(), "BC"));
 		return certGen.generateX509Certificate(pair.getPrivate(), "BC");
 	}
-	
-	
-/*	public static void generateCert(String subjectName, PublicKey publicKey) throws InvalidKeyException, NoSuchProviderException, SecurityException, SignatureException, NoSuchAlgorithmException, CertificateEncodingException, IOException
-	{
-		
-		X509V1CertificateGenerator  certGen = new X509V1CertificateGenerator();
 
-        certGen.setSerialNumber(BigInteger.valueOf(System.currentTimeMillis()));
-        certGen.setIssuerDN(new X509Name("CN=Certificate Authority"));
-        certGen.setNotBefore(new Date(System.currentTimeMillis() - 50000));
-        certGen.setNotAfter(new Date(System.currentTimeMillis() + 100000));
-        certGen.setSubjectDN(new X509Name("CN="+subjectName));
-        certGen.setPublicKey(publicKey);
-        certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
-        
-        writeCert(subjectName, certGen.generateX509Certificate(CA_pair.getPrivate(), "BC"));
-	}
-*/
-
+	/**
+	 * Reads the contents of the specified certificate
+	 * @param f
+	 * @return X509Certificate
+	 * @throws CertificateException
+	 * @throws NoSuchProviderException
+	 * @throws IOException
+	 */
+	
 	public static X509Certificate readCert(File f) throws CertificateException, NoSuchProviderException, IOException
 	{	
 		byte[] b;
@@ -129,6 +133,17 @@ public class CertAuth {
 	    return  (X509Certificate)fact.generateCertificate(in);
 	 }
 	
+	/**
+	 * Validates the client certificate
+	 * @param f
+	 * @throws NoSuchProviderException
+	 * @throws IOException
+	 * @throws CertificateException
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws SignatureException
+	 */
+	
 	public static void checkCertStatus(File f) throws NoSuchProviderException, IOException, CertificateException, InvalidKeyException, NoSuchAlgorithmException, SignatureException
 	{
 		X509Certificate cert = readCert(f);
@@ -143,22 +158,5 @@ public class CertAuth {
 		}
 		System.out.println("Certificate for node "+ cert.getSubjectX500Principal().getName().substring(3) +" is valid.");
 	}
-	    
-	    public static void main(String[] args)  throws Exception
-	    {
-	    	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider()); //have this in the final main method()
-	    	
-	    	KeyPairGenerator kpGen = KeyPairGenerator.getInstance("RSA", "BC");
-	        kpGen.initialize(1024, new SecureRandom());
-	    	@SuppressWarnings("unused")
-			KeyPair pair = kpGen.generateKeyPair();
-	       
-//	        X509Certificate cert1 = dummy_generateCert("hello",pair);
-//	        X509Certificate cert2 = dummy_generateCert("kitty",pair);
-//	        System.out.println(cert1);
-//	        System.out.println(cert2);
-//	        System.out.println("--------------");
-//	        checkCertStatus("hello");
-//	        checkCertStatus("kitty");
-	      }
-	}
+	
+}

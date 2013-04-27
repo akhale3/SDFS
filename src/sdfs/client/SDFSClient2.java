@@ -34,7 +34,7 @@ import org.bouncycastle.openssl.PEMWriter;
 import sdfs.ca.CertAuth;
 
 /**
- * 
+ * Client Program
  * @author anish
  *
  */
@@ -51,6 +51,12 @@ public class SDFSClient2 {
 	
 	private final String[] enabledCipherSuites = { "SSL_DH_anon_WITH_RC4_128_MD5" };
 	
+	/**
+	 * Sets the directory path to ./src/sdfs/client
+	 * @param fileUID
+	 * @return filePath
+	 */
+	
 	Path computeFilePath(String fileUID)
 	{
 		Path filePath;
@@ -58,15 +64,19 @@ public class SDFSClient2 {
 		return filePath;
 	}
 	
-	@SuppressWarnings("unused")
+	/**
+	 * Retrieve a requested file from the server
+	 * @param fileUID
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 */
+	
 	void getFile(String fileUID) throws UnknownHostException, IOException
 	{
 		int length;
 		String fileName;
 		String suffix;
-		int fileLength;
 		String temp;
-		File file = null;
 		Path filePath = null;
 		BufferedReader input = new BufferedReader(new InputStreamReader(inFromServer));
 		
@@ -110,6 +120,13 @@ public class SDFSClient2 {
 		outToServer.write('\n');
 	}
 	
+	/**
+	 * Put a specified file onto the server
+	 * @param fileUID
+	 * @return true if file exists, false otherwise
+	 * @throws IOException
+	 */
+	
 	boolean putFile(String fileUID) throws IOException
 	{
 		int length;
@@ -143,15 +160,30 @@ public class SDFSClient2 {
 		else
 		{
 			System.out.println(fileUID + " does not exist");
-			System.out.println("Acquiring client certificate ...");
 			return false;
 		}
 	}
+	
+	/**
+	 * Delegate access rights to specified clients for a particular file
+	 * @param clientID
+	 */
 	
 	void delegate(String clientID)
 	{
 		
 	}
+	
+	/**
+	 * Send client certificate to the server for authentication
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchProviderException
+	 * @throws InvalidKeyException
+	 * @throws CertificateEncodingException
+	 * @throws SecurityException
+	 * @throws SignatureException
+	 */
 	
 	void sendCert() throws IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, CertificateEncodingException, SecurityException, SignatureException
 	{
@@ -163,6 +195,7 @@ public class SDFSClient2 {
 		if(!certExists)
 		{
 			// Invoke sdfs.CertAuth.generateCert()
+			System.out.println("Acquiring client certificate ...");
 			KeyPairGenerator kpGen = KeyPairGenerator.getInstance("RSA", "BC");
 	        kpGen.initialize(1024, new SecureRandom());
 	    	KeyPair pair = kpGen.generateKeyPair();
@@ -174,6 +207,20 @@ public class SDFSClient2 {
 		}
 	}
 	
+	/**
+	 * Initiates a secure session with the server over SSL
+	 * @param server_host
+	 * @param port_no
+	 * @throws UnknownHostException
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws NoSuchProviderException
+	 * @throws InvalidKeyException
+	 * @throws CertificateEncodingException
+	 * @throws SecurityException
+	 * @throws SignatureException
+	 */
+	
 	void startFSSession(String server_host, int port_no) throws UnknownHostException, IOException, NoSuchAlgorithmException, NoSuchProviderException, InvalidKeyException, CertificateEncodingException, SecurityException, SignatureException
 	{
 		sslFact = (SSLSocketFactory)SSLSocketFactory.getDefault();
@@ -184,8 +231,14 @@ public class SDFSClient2 {
 		inFromServer = clientSocket.getInputStream();
 		outToServer = clientSocket.getOutputStream();
 		
+		// Invoke sendCert() to send client certificate to the server
 		sendCert();
 	}
+	
+	/**
+	 * Terminates an established session
+	 * @throws IOException
+	 */
 	
 	void endSession() throws IOException
 	{
@@ -254,9 +307,7 @@ public class SDFSClient2 {
 			choice = input.readLine();
 		}
 		while(choice.equalsIgnoreCase("y"));
-		
-//		client.putFile("hello_cert");
-//		client.getFile("test");
+
 		client.endSession();
 	 }
 
