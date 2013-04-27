@@ -58,7 +58,19 @@ public class CertAuth {
 		pemWrt.close();
 	}
 	
-	
+	/**
+	 * 
+	 * @param subjectName
+	 * @param pair
+	 * @return X509Certificate
+	 * @throws InvalidKeyException
+	 * @throws NoSuchProviderException
+	 * @throws SecurityException
+	 * @throws SignatureException
+	 * @throws NoSuchAlgorithmException
+	 * @throws CertificateEncodingException
+	 * @throws IOException
+	 */
 	public static X509Certificate generateCert(String subjectName, KeyPair pair) throws InvalidKeyException, NoSuchProviderException, SecurityException, SignatureException, NoSuchAlgorithmException, CertificateEncodingException, IOException
 	{
 		

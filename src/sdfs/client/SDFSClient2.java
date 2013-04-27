@@ -1,11 +1,14 @@
 package sdfs.client;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -30,11 +33,18 @@ import org.bouncycastle.openssl.PEMWriter;
 
 import sdfs.ca.CertAuth;
 
+/**
+ * 
+ * @author anish
+ *
+ */
+
 public class SDFSClient2 {
 	
 	private InputStream inFromServer = null;
 	private OutputStream outToServer = null;
-	private static FileInputStream fileIS = null;
+	private FileInputStream fileIS = null;
+	private FileOutputStream fileOS = null;
 	
 	private SSLSocketFactory sslFact = null;
 	private SSLSocket clientSocket = null;
@@ -48,34 +58,86 @@ public class SDFSClient2 {
 		return filePath;
 	}
 	
+	@SuppressWarnings("unused")
 	void getFile(String fileUID) throws UnknownHostException, IOException
 	{
+		int length;
+		String fileName;
+		String suffix;
+		int fileLength;
+		String temp;
+		File file = null;
+		Path filePath = null;
+		BufferedReader input = new BufferedReader(new InputStreamReader(inFromServer));
 		
+		outToServer.write("put".getBytes());
+		outToServer.write('\n');
+		
+		fileName = fileUID;
+		
+		outToServer.write(fileName.getBytes(Charset.forName("UTF-8")));
+		outToServer.write('\n');
+		outToServer.flush();
+		
+		suffix = fileName.substring(fileName.lastIndexOf('.') + 1, fileName.length()).trim();
+		if(suffix.equalsIgnoreCase("cert"))
+		{
+			filePath = computeFilePath("certs/" + fileName);
+		}
+		else
+		{
+			filePath = computeFilePath(fileName);
+		}
+		
+		fileOS = new FileOutputStream(filePath.toString());
+
+		temp = input.readLine();
+		length = temp.length();
+		fileOS.write(temp.getBytes(), 0, length);
+		
+		while(true)
+		{
+			temp = input.readLine();
+			if(temp.equalsIgnoreCase("eof"))
+			{
+				break;
+			}
+			length = temp.length();
+			fileOS.write("\n".getBytes(), 0, 1);
+			fileOS.write(temp.getBytes(), 0, length);
+		}
+		
+		outToServer.write('\n');
 	}
 	
 	boolean putFile(String fileUID) throws IOException
 	{
 		int length;
 		String fileName;
-		Long fileLength;
 		Path filePath = computeFilePath(fileUID);
 		File file = new File(filePath.toString());
+		
+		outToServer.write("get".getBytes());
+		outToServer.write('\n');
+		
 		if(file.exists())
 		{
 			byte[] buffer = new byte[1024];
 			fileIS = new FileInputStream(file);
 			fileName = file.getName();
+			
 			outToServer.write(fileName.getBytes(Charset.forName("UTF-8")));
 			outToServer.write('\n');
 			outToServer.flush();
-			fileLength = new Long(file.length());;
-			outToServer.write(fileLength.toString().getBytes());
-			outToServer.write('\n');
-			outToServer.flush();
-			while ((length = fileIS.read(buffer)) != -1)
+			
+			while ((length = fileIS.read(buffer)) > 0)
 			{
 				outToServer.write(buffer, 0, length);
 			}
+			
+			outToServer.write('\n');
+			outToServer.write("eof".getBytes());
+			outToServer.write('\n');
 			return true;
 		}
 		else
@@ -86,7 +148,7 @@ public class SDFSClient2 {
 		}
 	}
 	
-	void delegate()
+	void delegate(String clientID)
 	{
 		
 	}
@@ -128,6 +190,7 @@ public class SDFSClient2 {
 	void endSession() throws IOException
 	{
 		fileIS.close();
+		fileOS.close();
 		outToServer.close();
 		inFromServer.close();
 		clientSocket.close();
@@ -136,10 +199,64 @@ public class SDFSClient2 {
 	public static void main(String argv[]) throws Exception
 	 {
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+		
+		int option;
+		String choice;
+		String fileUID;
+		String clientID;
+		BufferedReader input = new BufferedReader(new InputStreamReader(System.in));
 		SDFSClient2 client = new SDFSClient2();
-		client.startFSSession("localhost", 6789);
-//		client.sendCert();
+		
+		do
+		{
+			System.out.println("Menu");
+			System.out.println("1. Connect to server");
+			System.out.println("2. Put a file");
+			System.out.println("3. Get a file");
+			System.out.println("4. Delegate role");
+			System.out.println("5. Terminate session");
+			System.out.println("Enter option");
+			option = Integer.parseInt(input.readLine());
+			
+			switch(option)
+			{
+			case 1:	//Connect to server
+				client.startFSSession("localhost", 6789);
+//				client.sendCert();
+				break;
+				
+			case 2:	//Put a file
+				System.out.print("Enter filename: ");
+				fileUID = input.readLine();
+				client.putFile(fileUID);
+				break;
+				
+			case 3:	//Get a file
+				System.out.print("Enter filename: ");
+				fileUID = input.readLine();
+				client.getFile(fileUID);
+				break;
+				
+			case 4:	//Delegate role
+				System.out.print("Enter client ID: ");
+				clientID = input.readLine();
+				client.delegate(clientID);
+				break;
+				
+			case 5:	//Terminate session
+				client.endSession();
+				break;
+				
+			default: System.out.println("Invalid option. Retry.");
+			}
+			
+			System.out.print("Do you wish to continue (Y/n)?");
+			choice = input.readLine();
+		}
+		while(choice.equalsIgnoreCase("y"));
+		
 //		client.putFile("hello_cert");
+//		client.getFile("test");
 		client.endSession();
 	 }
 
